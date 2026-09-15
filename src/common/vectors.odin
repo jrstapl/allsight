@@ -2,6 +2,7 @@ package common
 
 import "core:math"
 
+Vector2 :: [2]f64
 Vector3 :: [3]f64
 VectorN :: [dynamic]f64
 
