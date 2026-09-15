@@ -5,12 +5,8 @@ import "core:os"
 import "core:strconv"
 import "core:strings"
 
-import "../common"
+import "src:common"
 
-Error :: union #shared_nil {
-	STL_Construction_Error,
-	os.Error,
-}
 
 STL_Construction_Error :: enum {
 	None = 0,
@@ -21,6 +17,7 @@ STL_Construction_Error :: enum {
 
 read_stl :: proc(fp: string) -> (common.Mesh, Error) {
 
+	// TODO: check file size and memmap rather than read entire file?
 	data, err := os.read_entire_file(fp, context.allocator)
 	if err != nil {
 
@@ -198,7 +195,7 @@ read_ascii_stl :: proc(data: []byte) -> (common.Mesh, Error) {
 
 	}
 
-	return common.Mesh{}, nil
+	return common.Mesh{vertices = vertices, faces = faces, pointdata = normals}, nil
 
 }
 

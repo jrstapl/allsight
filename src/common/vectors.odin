@@ -4,6 +4,7 @@ import "core:math"
 
 Vector2 :: [2]f64
 Vector3 :: [3]f64
+Vector4 :: [4]f64
 VectorN :: [dynamic]f64
 
 normalize_vector :: proc {
@@ -68,5 +69,11 @@ cross_product_normalized :: proc {
 cross_product_normalized_vector3 :: proc(v1, v2: Vector3) -> Vector3 {
 	tmp := cross_product_vector3(v1, v2)
 	return normalize_vector3(tmp)
+}
+
+
+floor_xy :: proc(v: ^Vector3) {
+	v.x = math.floor(v.x)
+	v.y = math.floor(v.y)
 }
 

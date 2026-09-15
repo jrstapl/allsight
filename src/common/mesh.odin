@@ -7,6 +7,11 @@ NGon :: struct {
 	normal: Vector3,
 }
 
+Triangle :: struct {
+	points: [3]Vector3,
+	normal: Vector3,
+}
+
 Mesh :: struct {
 	vertices:  []Vector3,
 	faces:     []NGon,
