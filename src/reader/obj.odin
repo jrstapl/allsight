@@ -1,10 +1,10 @@
 package reader
 
-import "../common"
 import "core:log"
 import "core:os"
 import "core:strconv"
 import "core:strings"
+import "src:common"
 
 ParseCoord :: proc(split: []string, idx: i32) -> f32 {
 	coord, ok := strconv.parse_f32(split[idx])
