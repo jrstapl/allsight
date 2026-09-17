@@ -1,4 +1,5 @@
-package common
+package linalg
+
 Sort :: proc {
 	SortPoints,
 	SortPointsAndUVs,

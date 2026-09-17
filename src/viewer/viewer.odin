@@ -2,7 +2,7 @@ package viewer
 
 import "core:fmt"
 import "core:os"
-import "src:common"
+import "src:linalg"
 import "src:reader"
 import rl "vendor:raylib"
 
@@ -35,8 +35,8 @@ open_window :: proc(arguments: []string) {
 		}
 	}
 
-	perspectiveMatrix := common.MakePerspectiveMatrix(FOV, SCREEN_WIDTH, SCREEN_HEIGHT, NEAR_PLANE, FAR_PLANE)
-	ambient := common.Vector3{0.2, 0.2, 0.2}
+	perspectiveMatrix := linalg.MakePerspectiveMatrix(FOV, SCREEN_WIDTH, SCREEN_HEIGHT, NEAR_PLANE, FAR_PLANE)
+	ambient := linalg.Vector3{0.2, 0.2, 0.2}
 
 
 	for !rl.WindowShouldClose() {

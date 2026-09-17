@@ -1,12 +1,12 @@
 package viewer
 
 import "core:math"
-import "src:common"
+import "src:linalg"
 import rl "vendor:raylib"
 
 // Coordinate systems
-ProjectToScreen :: proc(mat: common.Matrix4x4, p: common.Vector3) -> common.Vector3 {
-	clip := common.Mat4MulVec4(mat, common.Vector4{p.x, p.y, p.z, 1})
+ProjectToScreen :: proc(mat: linalg.Matrix4x4, p: common.Vector3) -> common.Vector3 {
+	clip := linalg.Mat4MulVec4(mat, common.Vector4{p.x, p.y, p.z, 1})
 	invW: f64 = 1 / clip.w
 
 	ndcX := clip.x * invW
@@ -15,12 +15,12 @@ ProjectToScreen :: proc(mat: common.Matrix4x4, p: common.Vector3) -> common.Vect
 	screenX := (ndcX * 0.5 + 0.5) * SCREEN_WIDTH
 	screenY := (-ndcY * 0.5 + 0.5) * SCREEN_HEIGHT
 
-	return common.Vector3{screenX, screenY, invW}
+	return linalg.Vector3{screenX, screenY, invW}
 
 
 }
 
-BarycentricWeights :: proc(a, b, c, p: common.Vector2) -> common.Vector3 {
+BarycentricWeights :: proc(a, b, c, p: linalg.Vector2) -> common.Vector3 {
 	ac := c - a
 	ab := b - a
 	ap := p - a
@@ -32,18 +32,18 @@ BarycentricWeights :: proc(a, b, c, p: common.Vector2) -> common.Vector3 {
 	beta := (ac.x * ap.y - ac.y * ap.x) / area
 	gamma := (1.0 - alpha - beta)
 
-	return common.Vector3{alpha, beta, gamma}
+	return linalg.Vector3{alpha, beta, gamma}
 }
 
 // Optimization checks
 
-IsBackFace :: proc(v1, v2, v3: common.Vector3) -> bool {
+IsBackFace :: proc(v1, v2, v3: linalg.Vector3) -> bool {
 	edge1 := v2 - v1
 	edge2 := v3 - v1
-	crossNorm := common.cross_product_normalized(edge1, edge2)
-	toCamera := common.normalize_vector(v1)
+	crossNorm := linalg.cross_product_normalized(edge1, edge2)
+	toCamera := linalg.normalize_vector(v1)
 
-	return common.dot_product_vector3(crossNorm, toCamera) >= 0.0
+	return linalg.dot_product_vector3(crossNorm, toCamera) >= 0.0
 }
 
 IsPointOutsideViewport :: proc(x, y: i32) -> bool {
@@ -51,7 +51,7 @@ IsPointOutsideViewport :: proc(x, y: i32) -> bool {
 }
 
 
-IsFaceOutsideFrustum :: proc(p1, p2, p3: common.Vector3) -> bool {
+IsFaceOutsideFrustum :: proc(p1, p2, p3: linalg.Vector3) -> bool {
 	if (p1.z > 1 || p2.z > 1 || p3.z > 1) || (p1.z < -1 || p2.z < -1 || p3.z < -1) {
 		return true
 	}
@@ -72,7 +72,7 @@ IsFaceOutsideFrustum :: proc(p1, p2, p3: common.Vector3) -> bool {
 // Drawing procedures
 
 
-DrawLine :: proc(a, b: common.Vector2, color: rl.Color, image: ^rl.Image) {
+DrawLine :: proc(a, b: linalg.Vector2, color: rl.Color, image: ^rl.Image) {
 	dX := b.x - a.x
 	dY := b.y - a.y
 
@@ -93,7 +93,7 @@ DrawLine :: proc(a, b: common.Vector2, color: rl.Color, image: ^rl.Image) {
 }
 
 
-DrawPixel :: proc(x, y: f64, p1, p2, p3: ^common.Vector3, color: rl.Color, zBuffer: ^ZBuffer, image: ^rl.Image) {
+DrawPixel :: proc(x, y: f64, p1, p2, p3: ^linalg.Vector3, color: rl.Color, zBuffer: ^ZBuffer, image: ^rl.Image) {
 	ix := i32(x)
 	iy := i32(y)
 
@@ -101,7 +101,7 @@ DrawPixel :: proc(x, y: f64, p1, p2, p3: ^common.Vector3, color: rl.Color, zBuff
 		return
 	}
 
-	p := common.Vector2{x, y}
+	p := linalg.Vector2{x, y}
 	weights := BarycentricWeights(p1.xy, p2.xy, p3.xy, p)
 	alpha := weights.x
 	beta := weights.y
@@ -119,10 +119,10 @@ DrawPixel :: proc(x, y: f64, p1, p2, p3: ^common.Vector3, color: rl.Color, zBuff
 
 DrawTexelFlatShaded :: proc(
 	x, y: f64,
-	p1, p2, p3: ^common.Vector3,
-	uv1, uv2, uv3: ^common.Vector2,
+	p1, p2, p3: ^linalg.Vector3,
+	uv1, uv2, uv3: ^linalg.Vector2,
 	texture: Texture,
-	light: common.Vector3,
+	light: linalg.Vector3,
 	zBuffer: ^ZBuffer,
 	image: ^rl.Image,
 ) {
@@ -134,7 +134,7 @@ DrawTexelFlatShaded :: proc(
 	}
 
 
-	p := common.Vector2{x, y}
+	p := linalg.Vector2{x, y}
 	weights := BarycentricWeights(p1.xy, p2.xy, p3.xy, p)
 	alpha := weights.x
 	beta := weights.y
@@ -162,12 +162,12 @@ DrawTexelFlatShaded :: proc(
 
 DrawPixelPhongShaded :: proc(
 	x, y: f64,
-	v1, v2, v3, n1, n2, n3, p1, p2, p3: ^common.Vector3,
+	v1, v2, v3, n1, n2, n3, p1, p2, p3: ^linalg.Vector3,
 	color: rl.Color,
 	lights: []Light,
 	zBuffer: ^ZBuffer,
 	image: ^rl.Image,
-	ambient: common.Vector3,
+	ambient: linalg.Vector3,
 ) {
 	ix := i32(x)
 	iy := i32(y)
@@ -176,7 +176,7 @@ DrawPixelPhongShaded :: proc(
 		return
 	}
 
-	p := common.Vector2{x, y}
+	p := linalg.Vector2{x, y}
 	weights := BarycentricWeights(p1.xy, p2.xy, p3.xy, p)
 	alpha := weights.x
 	beta := weights.y
@@ -187,12 +187,12 @@ DrawPixelPhongShaded :: proc(
 
 	zIndex := SCREEN_WIDTH * iy + ix
 	if (depth < zBuffer[zIndex]) {
-		interpNormal := common.normalize_vector3(n1^ * alpha + n2^ * beta + n3^ * gamma)
+		interpNormal := linalg.normalize_vector3(n1^ * alpha + n2^ * beta + n3^ * gamma)
 		interpPos := ((v1^ * p1.z) * alpha + (v2^ * p2.z) * beta + (v3^ * p3.z) * gamma) * depth
 		lightAccum := ambient
 		for &light in lights {
-			lightVec := common.normalize_vector3(light.position - interpPos)
-			diffuse := math.max(0.0, common.dot_product_vector3(interpNormal, lightVec))
+			lightVec := linalg.normalize_vector3(light.position - interpPos)
+			diffuse := math.max(0.0, linalg.dot_product_vector3(interpNormal, lightVec))
 			lightAccum.r += diffuse * light.color.r * light.color.a
 			lightAccum.g += diffuse * light.color.g * light.color.a
 			lightAccum.b += diffuse * light.color.b * light.color.a
@@ -215,14 +215,14 @@ DrawPixelPhongShaded :: proc(
 
 DrawTexelPhongShaded :: proc(
 	x, y: f64,
-	v1, v2, v3, n1, n2, n3: ^common.Vector3,
-	uv1, uv2, uv3: ^common.Vector2,
-	p1, p2, p3: ^common.Vector3,
+	v1, v2, v3, n1, n2, n3: ^linalg.Vector3,
+	uv1, uv2, uv3: ^linalg.Vector2,
+	p1, p2, p3: ^linalg.Vector3,
 	texture: Texture,
 	lights: []Light,
 	zBuffer: ^ZBuffer,
 	image: ^rl.Image,
-	ambient: common.Vector3,
+	ambient: linalg.Vector3,
 ) {
 	ix := i32(x)
 	iy := i32(y)
@@ -231,7 +231,7 @@ DrawTexelPhongShaded :: proc(
 		return
 	}
 
-	p := common.Vector2{x, y}
+	p := linalg.Vector2{x, y}
 	weights := BarycentricWeights(p1.xy, p2.xy, p3.xy, p)
 	alpha := weights.x
 	beta := weights.y
@@ -249,12 +249,12 @@ DrawTexelPhongShaded :: proc(
 		texY := i32(interpV * f64(texture.height)) % texture.height
 
 		tex := texture.pixels[texY * texture.width + texX]
-		interpNormal := common.normalize_vector3(n1^ * alpha + n2^ * beta + n3^ * gamma)
+		interpNormal := linalg.normalize_vector3(n1^ * alpha + n2^ * beta + n3^ * gamma)
 		interpPos := ((v1^ * p1.z) * alpha + (v2^ * p2.z) * beta + (v3^ * p3.z) * gamma) * depth
 		lightAccum := ambient
 		for &light in lights {
-			lightVec := common.normalize_vector3(light.position - interpPos)
-			diffuse := math.max(0.0, common.dot_product_vector3(interpNormal, lightVec))
+			lightVec := linalg.normalize_vector3(light.position - interpPos)
+			diffuse := math.max(0.0, linalg.dot_product_vector3(interpNormal, lightVec))
 			lightAccum.r += diffuse * light.color.r * light.color.a
 			lightAccum.g += diffuse * light.color.g * light.color.a
 			lightAccum.b += diffuse * light.color.b * light.color.a
@@ -276,11 +276,11 @@ DrawTexelPhongShaded :: proc(
 }
 
 
-DrawFilledTriangle :: proc(p1, p2, p3: ^common.Vector3, color: rl.Color, zBuffer: ^ZBuffer, image: ^rl.Image) {
+DrawFilledTriangle :: proc(p1, p2, p3: ^linalg.Vector3, color: rl.Color, zBuffer: ^ZBuffer, image: ^rl.Image) {
 	Sort(p1, p2, p3)
-	common.floor_xy(p1)
-	common.floor_xy(p2)
-	common.floor_xy(p3)
+	linalg.floor_xy(p1)
+	linalg.floor_xy(p2)
+	linalg.floor_xy(p3)
 
 	if p1.y != p2.y {
 		invSlope1 := (p2.x - p1.x) / (p2.y - p1.y)
@@ -325,17 +325,17 @@ DrawFilledTriangle :: proc(p1, p2, p3: ^common.Vector3, color: rl.Color, zBuffer
 
 
 DrawTexturedTriangleFlatShaded :: proc(
-	p1, p2, p3: ^common.Vector3,
-	uv1, uv2, uv3: ^common.Vector2,
+	p1, p2, p3: ^linalg.Vector3,
+	uv1, uv2, uv3: ^linalg.Vector2,
 	texture: Texture,
-	light: common.Vector3,
+	light: linalg.Vector3,
 	zBuffer: ^ZBuffer,
 	image: ^rl.Image,
 ) {
 	Sort(p1, p2, p3, uv1, uv2, uv3)
-	common.floor_xy(p1)
-	common.floor_xy(p2)
-	common.floor_xy(p3)
+	linalg.floor_xy(p1)
+	linalg.floor_xy(p2)
+	linalg.floor_xy(p3)
 
 	if p1.y != p2.y {
 		invSlope1 := (p2.x - p1.x) / (p2.y - p1.y)
@@ -379,20 +379,20 @@ DrawTexturedTriangleFlatShaded :: proc(
 }
 
 DrawTrianglePhongShaded :: proc(
-	v1, v2, v3: ^common.Vector3,
-	p1, p2, p3: ^common.Vector3,
-	n1, n2, n3: ^common.Vector3,
+	v1, v2, v3: ^linalg.Vector3,
+	p1, p2, p3: ^linalg.Vector3,
+	n1, n2, n3: ^linalg.Vector3,
 	color: rl.Color,
 	lights: []Light,
 	zBuffer: ^ZBuffer,
 	image: ^rl.Image,
-	ambient: common.Vector3,
+	ambient: linalg.Vector3,
 ) {
 	Sort(p1, p2, p3, v1, v2, v3)
 
-	common.floor_xy(p1)
-	common.floor_xy(p2)
-	common.floor_xy(p3)
+	linalg.floor_xy(p1)
+	linalg.floor_xy(p2)
+	linalg.floor_xy(p3)
 
 
 	if p1.y != p2.y {
@@ -439,21 +439,21 @@ DrawTrianglePhongShaded :: proc(
 }
 
 DrawTexturedTrianglePhongShaded :: proc(
-	v1, v2, v3: ^common.Vector3,
-	p1, p2, p3: ^common.Vector3,
-	uv1, uv2, uv3: ^common.Vector2,
-	n1, n2, n3: ^common.Vector3,
+	v1, v2, v3: ^linalg.Vector3,
+	p1, p2, p3: ^linalg.Vector3,
+	uv1, uv2, uv3: ^linalg.Vector2,
+	n1, n2, n3: ^linalg.Vector3,
 	texture: Texture,
 	lights: []Light,
 	zBuffer: ^ZBuffer,
 	image: ^rl.Image,
-	ambient: common.Vector3,
+	ambient: linalg.Vector3,
 ) {
 	Sort(p1, p2, p3, uv1, uv2, uv3, v1, v2, v3)
 
-	common.floor_xy(p1)
-	common.floor_xy(p2)
-	common.floor_xy(p3)
+	linalg.floor_xy(p1)
+	linalg.floor_xy(p2)
+	linalg.floor_xy(p3)
 
 
 	if p1.y != p2.y {
@@ -540,9 +540,9 @@ DrawTexturedTrianglePhongShaded :: proc(
 
 // Drawing modes
 DrawWireframe :: proc(
-	vertices: []common.Vector3,
-	triangles: []common.Triangle,
-	projMat: common.Matrix4x4,
+	vertices: []linalg.Vector3,
+	triangles: []linalg.Triangle,
+	projMat: linalg.Matrix4x4,
 	color: rl.Color,
 	cullBackFace: bool,
 	image: ^rl.Image,
@@ -573,9 +573,9 @@ DrawWireframe :: proc(
 }
 
 DrawUnlit :: proc(
-	vertices: []common.Vector3,
-	triangles: []common.Triangle,
-	projMat: common.Matrix4x4,
+	vertices: []linalg.Vector3,
+	triangles: []linalg.Triangle,
+	projMat: linalg.Matrix4x4,
 	color: rl.Color,
 	zBuffer: ^ZBuffer,
 	image: ^rl.Image,
@@ -604,25 +604,25 @@ DrawUnlit :: proc(
 }
 
 DrawFlatShaded :: proc(
-	vertices: []common.Vector3,
-	triangles: []common.Triangle,
-	projMat: common.Matrix4x4,
+	vertices: []linalg.Vector3,
+	triangles: []linalg.Triangle,
+	projMat: linalg.Matrix4x4,
 	lights: []Light,
 	color: rl.Color,
 	zBuffer: ^ZBuffer,
 	image: ^rl.Image,
-	ambient: common.Vector3,
+	ambient: linalg.Vector3,
 ) {
 	for &tri in triangles {
 		v1 := vertices[tri[0]]
 		v2 := vertices[tri[1]]
 		v3 := vertices[tri[2]]
 
-		crossNorm := common.cross_product_normalized_vector3(v2 - v1, v3 - v1)
+		crossNorm := linalg.cross_product_normalized_vector3(v2 - v1, v3 - v1)
 		toCamera: Vector3
-		toCamera = common.normalize_vector3(v1)
+		toCamera = linalg.normalize_vector3(v1)
 
-		if common.dot_product_vector3(crossNorm, toCamera) >= 0.0 {
+		if linalg.dot_product_vector3(crossNorm, toCamera) >= 0.0 {
 			continue
 		}
 
@@ -636,7 +636,7 @@ DrawFlatShaded :: proc(
 
 		lightAccum := ambient
 		for &light in lights {
-			diffuse := math.max(0.0, common.dot_product_vector3(crossNorm, light.direction))
+			diffuse := math.max(0.0, linalg.dot_product_vector3(crossNorm, light.direction))
 			lightAccum.r += diffuse * light.color.r * light.color.a
 			lightAccum.g += diffuse * light.color.g * light.color.a
 			lightAccum.b += diffuse * light.color.b * light.color.a
@@ -660,15 +660,15 @@ DrawFlatShaded :: proc(
 
 
 DrawTexturedFlatShaded :: proc(
-	vertices: []common.Vector3,
-	triangles: []common.Triangle,
-	uvs: []common.Vector2,
+	vertices: []linalg.Vector3,
+	triangles: []linalg.Triangle,
+	uvs: []linalg.Vector2,
 	lights: []Light,
 	texture: Texture,
 	zBuffer: ^ZBuffer,
-	projMat: common.Matrix4x4,
+	projMat: linalg.Matrix4x4,
 	image: ^rl.Image,
-	ambient: common.Vector3,
+	ambient: linalg.Vector3,
 ) {
 	for &tri in triangles {
 		v1 := vertices[tri[0]]
@@ -679,7 +679,7 @@ DrawTexturedFlatShaded :: proc(
 		uv2 := uvs[tri[4]]
 		uv3 := uvs[tri[5]]
 
-		crossNorm := common.cross_product_normalized_vector3(v2 - v1, v3 - v1)
+		crossNorm := linalg.cross_product_normalized_vector3(v2 - v1, v3 - v1)
 		toCamera: Vector3
 		toCamera = Vector3Normalize(v1)
 
@@ -715,12 +715,12 @@ DrawTexturedFlatShaded :: proc(
 }
 
 DrawTexturedUnlit :: proc(
-	vertices: []common.Vector3,
-	triangles: []common.Triangle,
-	uvs: []common.Vector2,
+	vertices: []linalg.Vector3,
+	triangles: []linalg.Triangle,
+	uvs: []linalg.Vector2,
 	texture: Texture,
 	zBuffer: ^ZBuffer,
-	projMat: common.Matrix4x4,
+	projMat: linalg.Matrix4x4,
 	image: ^rl.Image,
 ) {
 	for &tri in triangles {
@@ -752,15 +752,15 @@ DrawTexturedUnlit :: proc(
 }
 
 DrawPhongShaded :: proc(
-	vertices: []common.Vector3,
-	triangles: []common.Triangle,
-	normals: []common.Vector3,
+	vertices: []linalg.Vector3,
+	triangles: []linalg.Triangle,
+	normals: []linalg.Vector3,
 	lights: []Light,
 	color: rl.Color,
 	zBuffer: ^ZBuffer,
-	projMat: common.Matrix4x4,
+	projMat: linalg.Matrix4x4,
 	image: ^rl.Image,
-	ambient: common.Vector3,
+	ambient: linalg.Vector3,
 ) {
 
 	for &tri in triangles {
@@ -791,16 +791,16 @@ DrawPhongShaded :: proc(
 }
 
 DrawTexturedPhongShaded :: proc(
-	vertices: []common.Vector3,
-	triangles: []common.Triangle,
-	uvs: []common.Vector2,
-	normals: []common.Vector3,
+	vertices: []linalg.Vector3,
+	triangles: []linalg.Triangle,
+	uvs: []linalg.Vector2,
+	normals: []linalg.Vector3,
 	lights: []Light,
 	texture: Texture,
 	zBuffer: ^ZBuffer,
-	projMat: common.Matrix4x4,
+	projMat: linalg.Matrix4x4,
 	image: ^rl.Image,
-	ambient: common.Vector3,
+	ambient: linalg.Vector3,
 ) {
 
 	for &tri in triangles {

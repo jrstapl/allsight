@@ -1,4 +1,4 @@
-package common
+package linalg
 
 import rl "vendor:raylib"
 

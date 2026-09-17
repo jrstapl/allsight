@@ -5,7 +5,7 @@ import "core:os"
 import "core:strconv"
 import "core:strings"
 
-import "src:common"
+import "src:linalg"
 
 
 STL_Construction_Error :: enum {
@@ -15,13 +15,13 @@ STL_Construction_Error :: enum {
 	Malformed_Vertex,
 }
 
-read_stl :: proc(fp: string) -> (common.Mesh, Error) {
+read_stl :: proc(fp: string) -> (linalg.Mesh, Error) {
 
 	// TODO: check file size and memmap rather than read entire file?
 	data, err := os.read_entire_file(fp, context.allocator)
 	if err != nil {
 
-		return common.Mesh{}, err
+		return linalg.Mesh{}, err
 	}
 	defer delete(data)
 
@@ -42,7 +42,7 @@ read_stl :: proc(fp: string) -> (common.Mesh, Error) {
 		   )) {
 		mesh, ascii_err := read_ascii_stl(data)
 		if ascii_err != nil {
-			return common.Mesh{}, ascii_err
+			return linalg.Mesh{}, ascii_err
 
 		}
 
@@ -53,18 +53,18 @@ read_stl :: proc(fp: string) -> (common.Mesh, Error) {
 		mesh, bin_err := read_binary_stl(data)
 		if bin_err != nil || true {
 			fmt.println("Binary STL reader not yet implemented...")
-			return common.Mesh{}, bin_err
+			return linalg.Mesh{}, bin_err
 		}
 		return mesh, nil
 	}
 
-	return common.Mesh{}, nil
+	return linalg.Mesh{}, nil
 
 }
 
 
-read_binary_stl :: proc(data: []byte) -> (common.Mesh, Error) {
-	return common.Mesh{}, nil
+read_binary_stl :: proc(data: []byte) -> (linalg.Mesh, Error) {
+	return linalg.Mesh{}, nil
 
 }
 
@@ -83,10 +83,10 @@ endsolid
 
 */
 
-read_ascii_stl :: proc(data: []byte) -> (common.Mesh, Error) {
-	vertices: [dynamic]common.Vector3
+read_ascii_stl :: proc(data: []byte) -> (linalg.Mesh, Error) {
+	vertices: [dynamic]linalg.Vector3
 	faces: [dynamic][3]int // STL should be a triangle, until we error otherwise we will assume each face has 3 points
-	normals: [dynamic]common.Vector3
+	normals: [dynamic]linalg.Vector3
 
 	current_vertex_id: u32 = 0
 	current_face_id: u32 = 0
@@ -139,14 +139,14 @@ read_ascii_stl :: proc(data: []byte) -> (common.Mesh, Error) {
 				calculate_normal = true
 
 			} else {
-				return common.Mesh{}, STL_Construction_Error.Malformed_Normal
+				return linalg.Mesh{}, STL_Construction_Error.Malformed_Normal
 			}
 
 			if !all_ok {
-				return common.Mesh{}, STL_Construction_Error.Malformed_Facet
+				return linalg.Mesh{}, STL_Construction_Error.Malformed_Facet
 			}
 
-			append(&normals, common.Vector3{x, y, z})
+			append(&normals, linalg.Vector3{x, y, z})
 
 		case "vertex":
 			x, y, z: f64
@@ -161,10 +161,10 @@ read_ascii_stl :: proc(data: []byte) -> (common.Mesh, Error) {
 
 
 			} else {
-				return common.Mesh{}, STL_Construction_Error.Malformed_Vertex
+				return linalg.Mesh{}, STL_Construction_Error.Malformed_Vertex
 			}
 
-			p := common.Vector3{x, y, z}
+			p := linalg.Vector3{x, y, z}
 			add_point := true
 			for point, idx in vertices {
 				if point == p {
@@ -180,7 +180,7 @@ read_ascii_stl :: proc(data: []byte) -> (common.Mesh, Error) {
 		case "endfacet":
 			current_face_id += 1
 			if calculate_normal {
-				norm := common.calculate_face_normal(
+				norm := linalg.calculate_face_normal(
 					vertices[current_vertex_id - 2],
 					vertices[current_vertex_id - 1],
 					vertices[current_vertex_id],
@@ -195,7 +195,7 @@ read_ascii_stl :: proc(data: []byte) -> (common.Mesh, Error) {
 
 	}
 
-	return common.Mesh{vertices = vertices, faces = faces, pointdata = normals}, nil
+	return linalg.Mesh{vertices = vertices, faces = faces, pointdata = normals}, nil
 
 }
 
