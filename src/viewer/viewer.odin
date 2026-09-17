@@ -2,6 +2,7 @@ package viewer
 
 import "core:fmt"
 import "core:os"
+import "src:common"
 import "src:reader"
 import rl "vendor:raylib"
 
@@ -34,9 +35,14 @@ open_window :: proc(arguments: []string) {
 		}
 	}
 
+	perspectiveMatrix := common.MakePerspectiveMatrix(FOV, SCREEN_WIDTH, SCREEN_HEIGHT, NEAR_PLANE, FAR_PLANE)
+	ambient := common.Vector3{0.2, 0.2, 0.2}
+
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
+
+		DrawMesh(mesh.vertices, mesh.faces, perspectiveMatrix, zBuffer, ambient)
 
 
 		rl.EndDrawing()

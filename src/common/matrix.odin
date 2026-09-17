@@ -2,7 +2,8 @@ package common
 
 import "core:math"
 
-Matrix4x4 :: [4][4]f32
+
+Matrix4x4 :: [4][4]f64
 
 
 Mat4MulVec3 :: proc(mat: Matrix4x4, vec: Vector3) -> Vector3 {
@@ -95,9 +96,9 @@ MakeViewMatrix :: proc(eye: Vector3, target: Vector3) -> Matrix4x4 {
 
 }
 
-MakePerspectiveMatrix :: proc(fov: f32, screenWidth: i32, screenHeight: i32, near: f32, far: f32) -> Matrix4x4 {
-	f := 1.0 / math.tan_f32(fov * 0.5 * DEG_TO_RAD)
-	aspect := f32(screenWidth) / f32(screenHeight)
+MakePerspectiveMatrix :: proc(fov: f64, screenWidth: i32, screenHeight: i32, near: f64, far: f64) -> Matrix4x4 {
+	f := 1.0 / math.tan_f64(fov * 0.5 * DEG_TO_RAD)
+	aspect := f64(screenWidth) / f64(screenHeight)
 
 	return Matrix4x4 {
 		{f / aspect, 0, 0, 0},
